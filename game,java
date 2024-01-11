@@ -1,0 +1,151 @@
+import java.util.*;
+
+class game {
+  public static void main(String[] args) {
+    // Generate word lists in words.java class
+    words.createWordLists();
+    
+    // Variable intitialization
+    Scanner keyboard = new Scanner(System.in);
+    int turnCount = 0;
+    int game_type = 0;
+    boolean checkingType = true;
+    String guess = "";
+    
+    // Selection / validation of game type
+    System.out.print("Would you like to play Wordle, Dordle, or Quordle?\n(enter 1, 2, or 4): ");
+    while (checkingType)
+      {
+        game_type = keyboard.nextInt();
+        if (game_type == 1 || game_type == 2 || game_type == 4)
+          {
+            checkingType = false;
+            keyboard.nextLine();
+          }
+        else
+          {
+            System.out.print("Enter a valid number: ");
+          }
+      }
+
+    // Boolean-ish (0 or 1) list of if each word was already solved
+    int[] correctAnswers = new int[game_type];
+    // List of number of turns, for each word, taken to get the correct answer
+    int[] turnNumToGetAnswer = new int[game_type];
+
+    // Makes list of random words for the game
+    String[] answers = new String[game_type];
+    for (int i=0;i<answers.length;i++)
+      {
+        answers[i] = toolkit.getRandomWord();
+      }
+
+    // Clears output
+    System.out.print("\033[H\033[2J");
+    System.out.flush();
+    
+    // Displays title based on game type
+    switch (game_type)
+      {
+        case 1:
+          System.out.println("WORDLE");
+          break;
+        case 2:
+          System.out.println("DORDLE (2 words)");
+          break;
+        case 4:
+          System.out.println("QUORDLE (4 words)");
+          break;
+      }
+    
+    // Displays turn number + input / validation of guess
+    for (int i=0; i<(5+game_type); i++)
+      {
+        boolean checkingWord = true;
+        
+        turnCount++;
+        System.out.println("\nTurn " + turnCount + "/" + (5+game_type));
+        
+        System.out.print("Guess a word: ");
+        while (checkingWord)
+          {
+            guess = keyboard.nextLine();
+            if (toolkit.checkIfWord(guess))
+              {
+                checkingWord = false;
+              }
+            else
+              {
+                System.out.print("Guess a valid, 5 letter word: ");
+              }
+          }
+
+        // Returns feedback of guess
+        for (int j=0; j<game_type; j++)
+          {
+            if (game_type != 1)
+              {
+                System.out.print("Word " + (j+1) + ": ");
+              }
+            toolkit.processGuess(guess, answers[j]);
+          }
+
+        // Increases turn count(s) if word not already solved
+        for (int j=0; j<game_type; j++)
+          {
+            if (correctAnswers[j] == 1)
+              {
+                continue;
+              }
+            
+            if (guess.equals(answers[j]))
+              {
+                correctAnswers[j] = 1;
+              }
+            turnNumToGetAnswer[j] += 1;
+          }
+        
+        // Displays congrats message based on game type and number of turns used
+        // condition: if all values in correctAnswers list are equal to 1
+        if (Arrays.stream(correctAnswers).distinct().count() == 1 && correctAnswers[0] == 1)
+          {
+            System.out.println("\nImpressive!");
+            for (int j=0; j<game_type; j++)
+              {
+                System.out.print(game_type == 1 ? "It took you " : "Word " + (j+1) + " took you ");
+                System.out.print(turnNumToGetAnswer[j] + (turnNumToGetAnswer[j] == 1 ? " turn" : " turns"));
+                System.out.println(game_type == 1 ? " to get it right!" : ".");
+              }
+            break;
+          }       
+      }
+
+    // Displays loss message based on game type
+    // condition: if not all values in correctAnswers list are equal to 1
+    if (Arrays.stream(correctAnswers).distinct().count() != 1 || correctAnswers[0] != 1)
+      {
+        System.out.println();
+        for (int i=0; i<game_type; i++)
+          {
+            // Displays what the answer was if word in multiple-word game wasn't solved
+            if (turnNumToGetAnswer[i] == (5+game_type))
+              {
+                System.out.print(game_type == 1 ? "The word" : "Word " + (i+1));
+                System.out.println(" was \"" + answers[i] + "\"");
+              }
+            // Displays turns it took to get any other words that were solved
+            else
+              {
+                System.out.print("Word " + (i+1) + " took you " + turnNumToGetAnswer[i]);
+                System.out.println(turnNumToGetAnswer[i] == 1 ? " turn." : " turns.");
+              }
+            
+          }
+        System.out.println("Better luck next time.");
+        
+      }
+    
+    // Closes input
+    keyboard.close();
+  }
+}
